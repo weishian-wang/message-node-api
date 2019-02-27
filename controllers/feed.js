@@ -46,30 +46,6 @@ const dummyPosts = [
       'Lizards are a widespread group of squamate reptiles, with over 6,000 species, ranging across all continents except Antarctica',
     imageUrl:
       'https://material-ui.com/static/images/cards/contemplative-reptile.jpg'
-  },
-  {
-    _id: '105',
-    creator: {
-      name: 'tester'
-    },
-    createdAt: new Date(),
-    title: 'Lizard',
-    content:
-      'Lizards are a widespread group of squamate reptiles, with over 6,000 species, ranging across all continents except Antarctica',
-    imageUrl:
-      'https://material-ui.com/static/images/cards/contemplative-reptile.jpg'
-  },
-  {
-    _id: '106',
-    creator: {
-      name: 'tester'
-    },
-    createdAt: new Date(),
-    title: 'Lizard',
-    content:
-      'Lizards are a widespread group of squamate reptiles, with over 6,000 species, ranging across all continents except Antarctica',
-    imageUrl:
-      'https://material-ui.com/static/images/cards/contemplative-reptile.jpg'
   }
 ];
 
@@ -78,18 +54,33 @@ const { validationResult } = require('express-validator/check');
 const Post = require('../models/post');
 
 exports.getPosts = (req, res, next) => {
-  res.status(200).json({
-    posts: dummyPosts
-  });
+  Post.find()
+    .then(posts => {
+      res.status(200).json({ posts: posts });
+    })
+    .catch(next);
+};
+
+exports.getSinglePost = (req, res, next) => {
+  const postId = req.params.postId;
+  Post.findById(postId)
+    .then(post => {
+      if (!post) {
+        const error = new Error('Post not found.');
+        error.statusCode = 404;
+        throw error;
+      }
+      res.status(200).json({ post: post });
+    })
+    .catch(next);
 };
 
 exports.createPost = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(422).json({
-      message: 'Validation failed. Entered data is incorrect.',
-      errors: errors.array()
-    });
+    const error = new Error('Validation failed. Entered data is incorrect.');
+    error.statusCode = 422;
+    throw error;
   }
   const title = req.body.title;
   const content = req.body.content;
@@ -107,5 +98,5 @@ exports.createPost = (req, res, next) => {
         post: result
       });
     })
-    .catch(console.log);
+    .catch(next);
 };
