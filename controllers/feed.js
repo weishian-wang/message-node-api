@@ -1,54 +1,3 @@
-const dummyPosts = [
-  {
-    _id: '101',
-    creator: {
-      name: 'tester'
-    },
-    createdAt: new Date(),
-    title: 'Lizard',
-    content:
-      'Lizards are a widespread group of squamate reptiles, with over 6,000 species, ranging across all continents except Antarctica',
-    imageUrl:
-      'https://material-ui.com/static/images/cards/contemplative-reptile.jpg'
-  },
-  {
-    _id: '102',
-    creator: {
-      name: 'tester'
-    },
-    createdAt: new Date(),
-    title: 'Lizard',
-    content:
-      'Lizards are a widespread group of squamate reptiles, with over 6,000 species, ranging across all continents except Antarctica',
-    imageUrl:
-      'https://material-ui.com/static/images/cards/contemplative-reptile.jpg'
-  },
-  {
-    _id: '103',
-    creator: {
-      name: 'tester'
-    },
-    createdAt: new Date(),
-    title: 'Lizard',
-    content:
-      'Lizards are a widespread group of squamate reptiles, with over 6,000 species, ranging across all continents except Antarctica',
-    imageUrl:
-      'https://material-ui.com/static/images/cards/contemplative-reptile.jpg'
-  },
-  {
-    _id: '104',
-    creator: {
-      name: 'tester'
-    },
-    createdAt: new Date(),
-    title: 'Lizard',
-    content:
-      'Lizards are a widespread group of squamate reptiles, with over 6,000 species, ranging across all continents except Antarctica',
-    imageUrl:
-      'https://material-ui.com/static/images/cards/contemplative-reptile.jpg'
-  }
-];
-
 const { validationResult } = require('express-validator/check');
 
 const Post = require('../models/post');
@@ -82,13 +31,19 @@ exports.createPost = (req, res, next) => {
     error.statusCode = 422;
     throw error;
   }
+  if (!req.file) {
+    const error = new Error('No image provided.');
+    error.statusCode = 422;
+    throw error;
+  }
+  const imageUrl = req.file.path.replace('\\' ,'/');
   const title = req.body.title;
   const content = req.body.content;
   const post = new Post({
     title: title,
-    imageUrl: 'http://localhost:8080/images/bunny-and-bear.jpg',
+    imageUrl: imageUrl,
     content: content,
-    creator: 'Node.js'
+    creator: { name: 'Node.js' }
   });
   post
     .save()
