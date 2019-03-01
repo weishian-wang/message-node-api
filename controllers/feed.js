@@ -7,10 +7,24 @@ const { validationResult } = require('express-validator/check');
 const Post = require('../models/post');
 
 exports.getPosts = (req, res, next) => {
+  const currentPage = req.query.page || 1;
+  const POST_PER_PAGE = 3;
+  let totalItems;
   Post.find()
-    .sort({ createdAt: -1 })
+    .countDocuments()
+    .then(count => {
+      totalItems = count;
+      return Post.find()
+        .sort({ createdAt: -1 })
+        .skip((currentPage - 1) * POST_PER_PAGE)
+        .limit(POST_PER_PAGE);
+    })
     .then(posts => {
-      res.status(200).json({ posts: posts });
+      res.status(200).json({
+        posts: posts,
+        totalItems: totalItems,
+        POST_PER_PAGE: POST_PER_PAGE
+      });
     })
     .catch(next);
 };
@@ -115,7 +129,7 @@ exports.deletePost = (req, res, next) => {
     })
     .then(result => {
       console.log(result);
-      res.status(200).json({ message: 'Post has been deleted.'});
+      res.status(200).json({ message: 'Post has been deleted.' });
     })
     .catch(next);
 };
@@ -134,7 +148,7 @@ exports.postValidation = () => {
 const clearImage = filePath => {
   filePath = path.join(__dirname, '..', filePath);
   fs.unlink(filePath, err => {
-    if (err) throw err;
-    console.log(`${filePath} was deleted.`);
+    if (err) console.log(err);
+    else console.log(`${filePath} was deleted.`);
   });
 };
