@@ -87,7 +87,7 @@ exports.updatePost = (req, res, next) => {
   if (req.file) {
     imageUrl = req.file.path.replace('\\', '/');
   }
-  if (!imageUrl) {
+  if (imageUrl === 'undefined') {
     const error = new Error('No image provided.');
     error.statusCode = 422;
     throw error;
