@@ -107,6 +107,7 @@ exports.updatePost = (req, res, next) => {
   }
   const title = req.body.title;
   const content = req.body.content;
+  let updatedPost;
   Post.findById(postId)
     .then(post => {
       if (!post) {
@@ -127,8 +128,17 @@ exports.updatePost = (req, res, next) => {
       post.content = content;
       return post.save();
     })
-    .then(result => {
-      res.status(200).json({ post: result });
+    .then(post => {
+      updatedPost = post;
+      return User.findById(post.creator);
+    })
+    .then(user => {
+      res
+        .status(200)
+        .json({
+          post: updatedPost,
+          creator: { _id: user._id, name: user.name }
+        });
     })
     .catch(next);
 };
@@ -151,7 +161,7 @@ exports.deletePost = (req, res, next) => {
       return Post.findByIdAndDelete(postId);
     })
     .then(result => {
-      return User.findById(req.userId)
+      return User.findById(req.userId);
     })
     .then(user => {
       user.posts.pull(postId);
@@ -172,6 +182,24 @@ exports.getStatus = (req, res, next) => {
         throw error;
       }
       res.status(200).json({ status: user.status });
+    })
+    .catch(next);
+};
+
+exports.updateStatus = (req, res, next) => {
+  const status = req.body.status;
+  User.findById(req.userId)
+    .then(user => {
+      if (!user) {
+        const error = new Error('User not found.');
+        error.statusCode = 401;
+        throw error;
+      }
+      user.status = status;
+      return user.save();
+    })
+    .then(result => {
+      res.status(200).json({ message: 'Your status has been updated.' });
     })
     .catch(next);
 };

@@ -30,6 +30,9 @@ router.put(
   feedController.updatePost
 );
 
+// PATCH /feed/status
+router.patch('/status', isAuth, feedController.updateStatus);
+
 // DELETE /feed/post/:postId
 router.delete('/post/:postId', isAuth, feedController.deletePost);
 
