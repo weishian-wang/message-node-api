@@ -163,6 +163,19 @@ exports.deletePost = (req, res, next) => {
     .catch(next);
 };
 
+exports.getStatus = (req, res, next) => {
+  User.findById(req.userId)
+    .then(user => {
+      if (!user) {
+        const error = new Error('User not found.');
+        error.statusCode = 401;
+        throw error;
+      }
+      res.status(200).json({ status: user.status });
+    })
+    .catch(next);
+};
+
 exports.postValidation = () => {
   return [
     body('title')
