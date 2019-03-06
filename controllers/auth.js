@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 
 const User = require('../models/user');
 
-exports.signup = (req, res, next) => {
+exports.signup = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     const error = new Error('Validation failed. Entered data is incorrect.');
@@ -16,26 +16,23 @@ exports.signup = (req, res, next) => {
   const name = req.body.name;
   const email = req.body.email;
   const password = req.body.password;
-  bcrypt
-    .hash(password, 12)
-    .then(hashedPw => {
-      const user = new User({
-        name: name,
-        email: email,
-        password: hashedPw
-      });
-      return user.save();
-    })
-    .then(result => {
-      res.status(201).json({
-        message: 'You have successfully signed up.',
-        userId: result._id
-      });
-    })
-    .catch(next);
+  const hashedPw = bcrypt.hashSync(password, 12);
+
+  const user = new User({
+    name: name,
+    email: email,
+    password: hashedPw
+  });
+
+  try {
+    await user.save();
+    res.status(201).json({ message: 'You have successfully signed up.' });
+  } catch (err) {
+    next(err);
+  }
 };
 
-exports.signin = (req, res, next) => {
+exports.signin = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     const error = new Error('Validation failed. Entered data is incorrect.');
@@ -45,32 +42,32 @@ exports.signin = (req, res, next) => {
   }
   const email = req.body.email;
   const password = req.body.password;
-  let loadedUser;
-  User.findOne({ email: email })
-    .then(user => {
-      if (!user) {
-        const error = new Error('User not found.');
-        error.statusCode = 401;
-        throw error;
-      }
-      loadedUser = user;
-      return bcrypt.compare(password, user.password);
-    })
-    .then(isValid => {
-      if (!isValid) {
-        const error = new Error('Wrong password.');
-        error.statusCode = 401;
-        throw error;
-      }
-      const userId = loadedUser._id.toString();
-      const token = jwt.sign(
-        { email: loadedUser.email, userId: userId },
-        process.env.JWT_SECRET_KEY,
-        { expiresIn: '1h' }
-      );
-      res.status(200).json({ token: token, userId: userId });
-    })
-    .catch(next);
+
+  try {
+    const user = await User.findOne({ email: email });
+    if (!user) {
+      const error = new Error('User not found.');
+      error.statusCode = 401;
+      throw error;
+    }
+    const isValid = bcrypt.compareSync(password, user.password);
+    if (!isValid) {
+      const error = new Error('Wrong password.');
+      error.statusCode = 401;
+      throw error;
+    }
+    const userId = user._id.toString();
+
+    const token = jwt.sign(
+      { email: user.email, userId: userId },
+      process.env.JWT_SECRET_KEY,
+      { expiresIn: '1h' }
+    );
+
+    res.status(200).json({ token: token, userId: userId });
+  } catch (err) {
+    next(err);
+  }
 };
 
 exports.authValidation = route => {
