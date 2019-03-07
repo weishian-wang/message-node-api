@@ -70,20 +70,17 @@ exports.createPost = async (req, res, next) => {
   });
 
   try {
-    await post.save();
+    const savedPost = await post.save();
     const user = await User.findById(req.userId);
-    user.posts.push(post);
+    user.posts.push(savedPost);
     await user.save();
 
     io.getIO().emit('posts', {
       action: 'create',
-      post: { ...post._doc, creator: { _id: user._id, name: user.name } }
+      post: { ...savedPost._doc, creator: { _id: user._id, name: user.name } }
     });
 
-    res.status(201).json({
-      message: 'Created a post successfully.',
-      post: { ...post._doc, creator: { _id: user._id, name: user.name } }
-    });
+    res.status(201).json({ message: 'Created a post successfully.' });
   } catch (err) {
     next(err);
   }
@@ -110,13 +107,13 @@ exports.updatePost = async (req, res, next) => {
   const content = req.body.content;
 
   try {
-    const post = await Post.findById(postId);
+    const post = await Post.findById(postId).populate('creator', 'name');
     if (!post) {
       const error = new Error('Post not found.');
       error.statusCode = 404;
       throw error;
     }
-    if (post.creator.toString() !== req.userId) {
+    if (post.creator._id.toString() !== req.userId) {
       const error = new Error('Not authorized.');
       error.statusCode = 403;
       throw error;
@@ -128,11 +125,13 @@ exports.updatePost = async (req, res, next) => {
     post.imageUrl = imageUrl;
     post.content = content;
     const updatedPost = await post.save();
-    const user = await User.findById(updatedPost.creator);
-    res.status(200).json({
-      post: updatedPost,
-      creator: { _id: user._id, name: user.name }
+
+    io.getIO().emit('posts', {
+      action: 'update',
+      post: { ...updatedPost._doc }
     });
+
+    res.status(200).json({ message: 'Updated a post successfully.' });
   } catch (err) {
     next(err);
   }
@@ -190,7 +189,7 @@ exports.updateStatus = async (req, res, next) => {
     }
     user.status = newStatus;
     await user.save();
-    res.status(200).json({ message: 'Your status has been updated.' });
+    res.status(200).json({ message: 'User status has been updated.' });
   } catch (err) {
     next(err);
   }
