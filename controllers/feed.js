@@ -77,14 +77,12 @@ exports.createPost = async (req, res, next) => {
 
     io.getIO().emit('posts', {
       action: 'create',
-      post: post,
-      creator: { _id: user._id, name: user.name }
+      post: { ...post._doc, creator: { _id: user._id, name: user.name } }
     });
-    
+
     res.status(201).json({
       message: 'Created a post successfully.',
-      post: post,
-      creator: { _id: user._id, name: user.name }
+      post: { ...post._doc, creator: { _id: user._id, name: user.name } }
     });
   } catch (err) {
     next(err);
