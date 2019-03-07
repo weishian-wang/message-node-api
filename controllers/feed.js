@@ -80,7 +80,7 @@ exports.createPost = async (req, res, next) => {
       post: { ...savedPost._doc, creator: { _id: user._id, name: user.name } }
     });
 
-    res.status(201).json({ message: 'Created a post successfully.' });
+    res.status(201).json({ message: 'Post created successfully.' });
   } catch (err) {
     next(err);
   }
@@ -131,7 +131,7 @@ exports.updatePost = async (req, res, next) => {
       post: { ...updatedPost._doc }
     });
 
-    res.status(200).json({ message: 'Updated a post successfully.' });
+    res.status(200).json({ message: 'Post updated successfully.' });
   } catch (err) {
     next(err);
   }
@@ -157,7 +157,10 @@ exports.deletePost = async (req, res, next) => {
     user.posts.pull(postId);
     await user.save();
     clearImage(post.imageUrl);
-    res.status(200).json({ message: 'Post has been deleted.' });
+
+    io.getIO().emit('posts', { action: 'delete', postId: postId });
+
+    res.status(200).json({ message: 'Post deleted successfully.' });
   } catch (err) {
     next(err);
   }
