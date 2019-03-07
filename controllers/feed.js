@@ -4,6 +4,7 @@ const path = require('path');
 const { body } = require('express-validator/check');
 const { validationResult } = require('express-validator/check');
 
+const io = require('../socket');
 const Post = require('../models/post');
 const User = require('../models/user');
 
@@ -73,6 +74,13 @@ exports.createPost = async (req, res, next) => {
     const user = await User.findById(req.userId);
     user.posts.push(post);
     await user.save();
+
+    io.getIO().emit('posts', {
+      action: 'create',
+      post: post,
+      creator: { _id: user._id, name: user.name }
+    });
+    
     res.status(201).json({
       message: 'Created a post successfully.',
       post: post,
@@ -173,7 +181,7 @@ exports.getStatus = async (req, res, next) => {
 };
 
 exports.updateStatus = async (req, res, next) => {
-  const status = req.body.status;
+  const newStatus = req.body.status;
 
   try {
     const user = await User.findById(req.userId);
@@ -182,7 +190,7 @@ exports.updateStatus = async (req, res, next) => {
       error.statusCode = 401;
       throw error;
     }
-    user.status = status;
+    user.status = newStatus;
     await user.save();
     res.status(200).json({ message: 'Your status has been updated.' });
   } catch (err) {
