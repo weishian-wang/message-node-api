@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const multer = require('multer');
 const uuidv4 = require('uuid/v4');
+const helmet = require('helmet');
 
 const feedRoutes = require('./routes/feed');
 const authRoutes = require('./routes/auth');
@@ -34,6 +35,7 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
+app.use(helmet());
 app.use(bodyParser.json()); // application/json
 app.use(
   multer({ storage: fileStorage, fileFilter: fileFilter }).single('image')
