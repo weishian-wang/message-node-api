@@ -204,7 +204,6 @@ exports.postValidation = () => {
       .trim()
       .isLength({ min: 2 }),
     body('content')
-      .trim()
       .isLength({ min: 5 })
   ];
 };

@@ -1,6 +1,6 @@
 # Social Post App - Back End
 
-Social Post App is an app for registered users to share their stories and activities with an image, and view other users' posts. Post can only be edited and deleted by the author.
+Social Post App is an app for registered users to show their personal status, share their stories and activities with an image, and view other users' posts. Post can only be edited and deleted by the author.
 
 ## Built With
 
